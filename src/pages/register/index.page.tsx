@@ -47,6 +47,8 @@ export default function Register() {
         name: data.name,
         username: data.username,
       })
+
+      await router.push('/register/conect-calendar')
     } catch (err) {
       if (err instanceof AxiosError && err?.response?.data?.message) {
         alert(err.response.data.message)
@@ -61,13 +63,14 @@ export default function Register() {
     <Container>
       <Header>
         <Heading as="strong">Bem-vindo ao Ignite Call!</Heading>
-      </Header>
-      <Text>
-        Precisamosde algumas informações para criar seu perfil! Ah, você pode
-        editar essas informações depois.
-      </Text>
 
-      <MultiStep size={4} currentStep={1} />
+        <Text>
+          Precisamosde algumas informações para criar seu perfil! Ah, você pode
+          editar essas informações depois.
+        </Text>
+
+        <MultiStep size={4} currentStep={1} />
+      </Header>
 
       <Form as="form" onSubmit={handleSubmit(handleRegister)}>
         <label>
@@ -89,7 +92,8 @@ export default function Register() {
           )}
         </label>
         <Button type="submit" disabled={isSubmitting}>
-          Próximo passo <ArrowRight />
+          Próximo passo
+          <ArrowRight />
         </Button>
       </Form>
     </Container>
