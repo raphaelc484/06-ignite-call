@@ -1,3 +1,4 @@
+import { zodResolver } from '@hookform/resolvers/zod'
 import {
   Button,
   Checkbox,
@@ -6,7 +7,14 @@ import {
   Text,
   TextInput,
 } from '@ignite-ui/react'
+import { ArrowRight } from 'phosphor-react'
+import { Controller, useFieldArray, useForm } from 'react-hook-form'
+import { z } from 'zod'
+import { api } from '../../../lib/axios'
+import { convertTimeStringToMinutes } from '../../../utils/convert-time-string-to-minutes'
+import { getWeeksDays } from '../../../utils/get-week-days'
 import { Container, Header } from '../styles'
+
 import {
   IntervalBox,
   IntervalDay,
@@ -15,14 +23,49 @@ import {
   IntervalInputs,
   FormError,
 } from './styles'
-import { ArrowRight } from 'phosphor-react'
-import { Controller, useFieldArray, useForm } from 'react-hook-form'
-import { z } from 'zod'
-import { getWeeksDays } from '../../../utils/get-week-days'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { convertTimeStringToMinutes } from '../../../utils/convert-time-string-to-minutes'
 
-const timeIntervalsFormSchema = z.object({
+// const timeIntervalsFormSchema = z.object({
+//   intervals: z
+//     .array(
+//       z.object({
+//         weekDay: z.number().min(0).max(6),
+//         enabled: z.boolean(),
+//         startTime: z.string(),
+//         endTime: z.string(),
+//       }),
+//     )
+//     .length(7)
+//     .transform((intervals) => intervals.filter((interval) => interval.enabled))
+//     .refine((intervals) => intervals.length > 0, {
+//       message: 'Você precisa selecionar pelo menos um dia da semana',
+//     })
+//     .transform((intervals) => {
+//       return intervals.map((interval) => {
+//         return {
+//           weekDay: interval.weekDay,
+//           startTimeInMinutes: convertTimeStringToMinutes(interval.startTime),
+//           endTimeInMinutes: convertTimeStringToMinutes(interval.endTime),
+//         }
+//       })
+//     })
+//     .refine(
+//       (intervals) => {
+//         return intervals.every(
+//           (interval) =>
+//             interval.endTimeInMinutes - 60 >= interval.startTimeInMinutes,
+//         )
+//       },
+//       {
+//         message:
+//           'O horário de término deve ser pelo menos 1h distante do início.',
+//       },
+//     ),
+// })
+
+// type TimeIntervalsFormInput = z.input<typeof timeIntervalsFormSchema>
+// type TimeIntervalsFormOutput = z.output<typeof timeIntervalsFormSchema>
+
+const timeIntervalsFormSchemaInput = z.object({
   intervals: z
     .array(
       z.object({
@@ -33,35 +76,37 @@ const timeIntervalsFormSchema = z.object({
       }),
     )
     .length(7)
-    .transform((intervals) => intervals.filter((interval) => interval.enabled))
-    .refine((intervals) => intervals.length > 0, {
-      message: 'Você precisa selecionar pelo menos um dia da semana!',
-    })
-    .transform((intervals) => {
-      return intervals.map((interval) => {
-        return {
-          weekDay: interval.weekDay,
-          starTimeInMinutes: convertTimeStringToMinutes(interval.startTime),
-          endTimeInMinutes: convertTimeStringToMinutes(interval.endTime),
-        }
-      })
-    })
-    .refine(
-      (intervals) => {
-        return intervals.every(
-          (interval) =>
-            interval.endTimeInMinutes - 60 >= interval.starTimeInMinutes,
-        )
-      },
-      {
-        message:
-          'O horário de término deve ser pelo menos 1h distante do início.',
-      },
-    ),
+    .refine((intervals) => intervals.some((interval) => interval.enabled), {
+      message: 'Você precisa selecionar pelo menos um dia da semana',
+    }),
 })
 
-type TimeIntervalsFormInput = z.input<typeof timeIntervalsFormSchema>
-type TimeIntervalsFormOutput = z.output<typeof timeIntervalsFormSchema>
+const timeIntervalsFormSchemaOutput = timeIntervalsFormSchemaInput
+  .transform((data) => {
+    return {
+      intervals: data.intervals
+        .filter((interval) => interval.enabled)
+        .map((interval) => ({
+          weekDay: interval.weekDay,
+          startTimeInMinutes: convertTimeStringToMinutes(interval.startTime),
+          endTimeInMinutes: convertTimeStringToMinutes(interval.endTime),
+        })),
+    }
+  })
+  .refine(
+    (data) =>
+      data.intervals.every(
+        (interval) =>
+          interval.endTimeInMinutes - 60 >= interval.startTimeInMinutes,
+      ),
+    {
+      message:
+        'O horário de término deve ser pelo menos 1h distante do início.',
+    },
+  )
+
+type TimeIntervalsFormInput = z.input<typeof timeIntervalsFormSchemaInput>
+type TimeIntervalsFormOutput = z.output<typeof timeIntervalsFormSchemaOutput>
 
 export default function TimeIntervals() {
   const {
@@ -71,7 +116,7 @@ export default function TimeIntervals() {
     control,
     watch,
   } = useForm<TimeIntervalsFormInput>({
-    resolver: zodResolver(timeIntervalsFormSchema),
+    resolver: zodResolver(timeIntervalsFormSchemaInput),
     defaultValues: {
       intervals: [
         { weekDay: 0, enabled: false, startTime: '08:00', endTime: '18:00' },
@@ -88,15 +133,18 @@ export default function TimeIntervals() {
   const weekDays = getWeeksDays()
 
   const { fields } = useFieldArray({
-    name: 'intervals',
     control,
+    name: 'intervals',
   })
 
   const intervals = watch('intervals')
 
   async function handleSetTimeIntervals(data: any) {
-    const formData = data as TimeIntervalsFormOutput
-    console.log(formData)
+    const { intervals } = data as TimeIntervalsFormOutput
+
+    await api.post('/users/time-intervals', {
+      intervals,
+    })
   }
 
   return (
