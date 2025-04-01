@@ -52,6 +52,36 @@ export function Calendar() {
               <CalendarDay>3</CalendarDay>
             </td>
           </tr>
+          <tr>
+            <td>4</td>
+            <td>5</td>
+            <td>6</td>
+            <td>7</td>
+            <td>
+              <CalendarDay>8</CalendarDay>
+            </td>
+            <td>
+              <CalendarDay disabled>9</CalendarDay>
+            </td>
+            <td>
+              <CalendarDay>10</CalendarDay>
+            </td>
+          </tr>
+          <tr>
+            <td>11</td>
+            <td>12</td>
+            <td>13</td>
+            <td>14</td>
+            <td>
+              <CalendarDay>15</CalendarDay>
+            </td>
+            <td>
+              <CalendarDay disabled>16</CalendarDay>
+            </td>
+            <td>
+              <CalendarDay>17</CalendarDay>
+            </td>
+          </tr>
         </tbody>
       </CalendarBody>
     </CalendarContainer>
