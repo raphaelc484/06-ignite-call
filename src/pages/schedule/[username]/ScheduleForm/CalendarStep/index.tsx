@@ -30,7 +30,7 @@ export function CalendarStep() {
     ? dayjs(selectedDate).format('DD[ de ]MMMM')
     : null
   const selectedDateWithoutTime = selectedDate
-    ? dayjs(selectedDate).format('DD[ de ]MMMM')
+    ? dayjs(selectedDate).format('YYYY-MM-DD')
     : null
 
   const { data: availability } = useQuery<Availability>(
