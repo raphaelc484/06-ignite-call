@@ -134,7 +134,7 @@ export default function TimeIntervals() {
 
   const router = useRouter()
 
-  const weekDays = getWeeksDays()
+  const weekDays = getWeeksDays({ short: false })
 
   const { fields } = useFieldArray({
     control,
